@@ -1,120 +1,3 @@
-// import { Component, OnInit, signal } from '@angular/core';
-// import { RouterOutlet } from '@angular/router';
-// import { HttpClient } from '@angular/common/http';
-// import { JsonPipe } from '@angular/common';
-
-// @Component({
-//   selector: 'app-root',
-//   standalone: true,
-//   imports: [RouterOutlet, JsonPipe],
-//   templateUrl: './app.html',
-//   styleUrl: './app.css',
-// })
-// export class App implements OnInit {
-//   protected readonly title = signal('vitalview-frontend');
-
-//   // 👇 backendData is now a *signal*, starting as null
-//   backendData = signal<any | null>(null);
-
-//   constructor(private http: HttpClient) {}
-
-//   ngOnInit(): void {
-//     this.http.get('http://localhost:3000').subscribe({
-//       next: (data) => {
-//         console.log('Backend data:', data);   // still for debugging
-//         this.backendData.set(data);          // 👈 update the signal
-//       },
-//       error: (err) => {
-//         console.error('Error calling backend', err);
-//         this.backendData.set({ error: true, details: err.message ?? err });
-//       },
-//     });
-//   }
-// }
-// import { Component, OnInit, signal } from '@angular/core';
-// import { RouterOutlet } from '@angular/router';
-// import { HttpClient } from '@angular/common/http';
-// import { JsonPipe, DecimalPipe } from '@angular/common';
-// import Chart from 'chart.js/auto';
-// import { HeartrateMetric } from './models/heartrate';
-
-// @Component({
-//   selector: 'app-root',
-//   standalone: true,
-//   imports: [RouterOutlet, JsonPipe, DecimalPipe],
-//   templateUrl: './app.html',
-//   styleUrl: './app.css',
-// })
-// export class App implements OnInit {
-//   // Just for fun, you can show this somewhere later if you want
-//   protected readonly title = signal('vitalview-frontend');
-
-//   // State
-//   heartrate = signal<HeartrateMetric | null>(null);
-//   loading = signal(true);
-//   error = signal<string | null>(null);
-
-//   // Reference to the Chart.js instance (so we can destroy it if needed)
-//   private hrChart?: Chart;
-
-//   constructor(private http: HttpClient) {}
-
-//   ngOnInit(): void {
-//     this.http
-//       .get<HeartrateMetric>('http://localhost:3000/metrics/heartrate')
-//       .subscribe({
-//         next: (metric) => {
-//           console.log('Heartrate metric:', metric);
-//           this.heartrate.set(metric);
-//           this.loading.set(false);
-//           this.buildChart(metric);
-//         },
-//         error: (err) => {
-//           console.error('Error fetching heartrate metric', err);
-//           this.error.set('Failed to load heartrate data');
-//           this.loading.set(false);
-//         },
-//       });
-//   }
-
-//   private buildChart(metric: HeartrateMetric) {
-//     const canvas = document.getElementById('hrChart') as HTMLCanvasElement | null;
-//     if (!canvas) {
-//       console.error('Canvas element #hrChart not found');
-//       return;
-//     }
-
-//     // Destroy previous chart if it exists (avoid duplicates on HMR)
-//     if (this.hrChart) {
-//       this.hrChart.destroy();
-//     }
-
-//     const labels = metric.measurements.map((m) =>
-//       (m.time / 1000).toFixed(0) + 's'
-//     );
-//     const values = metric.measurements.map((m) => m.rate);
-
-//     this.hrChart = new Chart(canvas, {
-//       type: 'line',
-//       data: {
-//         labels,
-//         datasets: [
-//           {
-//             label: 'Heart Rate (bpm)',
-//             data: values,
-//             borderWidth: 2,
-//             tension: 0.3,
-//           },
-//         ],
-//       },
-//       options: {
-//         responsive: true,
-//       },
-//     });
-//   }
-// }
-
-
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -139,6 +22,8 @@ interface MetricTab {
 export class App implements OnInit {
   // App title (if you want to use it somewhere)
   protected readonly title = signal('VitalView');
+  private readonly API_BASE = 'https://vitalview-backend.onrender.com';
+
 
   // Tabs for the 3 metrics
   readonly metricTabs: MetricTab[] = [
@@ -172,14 +57,21 @@ export class App implements OnInit {
 
   constructor(private http: HttpClient) {}
 
+  // ngOnInit(): void {
+  //   // Fetch all three metrics
+  //   this.fetchMetric('heartrate', 'http://localhost:3000/metrics/heartrate', true);
+  //   this.fetchMetric('gindex', 'http://localhost:3000/metrics/gindex');
+  //   this.fetchMetric(
+  //     'brainPulsatility',
+  //     'http://localhost:3000/metrics/brain-pulsatility'
+  //   );
+  // }
+  
   ngOnInit(): void {
-    // Fetch all three metrics
-    this.fetchMetric('heartrate', 'http://localhost:3000/metrics/heartrate', true);
-    this.fetchMetric('gindex', 'http://localhost:3000/metrics/gindex');
-    this.fetchMetric(
-      'brainPulsatility',
-      'http://localhost:3000/metrics/brain-pulsatility'
-    );
+    // Fetch all three metrics using the API_BASE variable
+    this.fetchMetric('heartrate', `${this.API_BASE}/metrics/heartrate`, true);
+    this.fetchMetric('gindex', `${this.API_BASE}/metrics/gindex`);
+    this.fetchMetric('brainPulsatility', `${this.API_BASE}/metrics/brain-pulsatility`);
   }
   
 
@@ -214,147 +106,6 @@ export class App implements OnInit {
     }
   }
 
-  // Build/update the Chart.js chart for a given metric
-  // private buildChart(id: MetricId, metric: any) {
-  //   const canvas = document.getElementById('metricChart') as HTMLCanvasElement | null;
-  //   if (!canvas) {
-  //     console.error('Canvas element #metricChart not found');
-  //     return;
-  //   }
-
-  //   const measurements: any[] = metric?.measurements ?? [];
-  //   if (!measurements.length) {
-  //     console.warn('No measurements for metric', id);
-  //     return;
-  //   }
-
-  //   // x-axis: time in seconds if available, otherwise index
-  //   const hasTime = 'time' in measurements[0];
-  //   const labels = measurements.map((m, index) =>
-  //     hasTime ? `${(m.time / 1000).toFixed(0)}s` : `${index}`
-  //   );
-
-  //   // y-axis: pick a numeric field that is not 'time' or 'hrv'
-  //   const sample = measurements[0];
-  //   const valueKey =
-  //     Object.keys(sample).find(
-  //       (k) =>
-  //         k !== 'time' &&
-  //         k !== 'hrv' &&
-  //         typeof sample[k] === 'number'
-  //     ) ?? 'rate';
-
-  //   const values = measurements.map((m) => m[valueKey]);
-
-  //   // Destroy previous chart to avoid duplicates
-  //   if (this.chart) {
-  //     this.chart.destroy();
-  //   }
-
-  //   this.chart = new Chart(canvas, {
-  //     type: 'line',
-  //     data: {
-  //       labels,
-  //       datasets: [
-  //         {
-  //           label: this.currentTab().label,
-  //           data: values,
-  //           borderWidth: 2,
-  //           tension: 0.3,
-  //         },
-  //       ],
-  //     },
-  //     options: {
-  //       responsive: true,
-  //     },
-  //   });
-  // }
-
-//   private buildChart(id: MetricId, metric: any) {
-//   const canvas = document.getElementById('metricChart') as HTMLCanvasElement | null;
-//   if (!canvas) {
-//     console.error('Canvas element #metricChart not found');
-//     return;
-//   }
-
-//   const measurements: any[] = metric?.measurements ?? [];
-//   if (!measurements.length) {
-//     console.warn('No measurements for metric', id);
-//     return;
-//   }
-
-//   // x-axis: time in seconds if available, otherwise index
-//   const hasTime = 'time' in measurements[0];
-//   const labels = measurements.map((m, index) =>
-//     hasTime ? `${(m.time / 1000).toFixed(0)}s` : `${index}`
-//   );
-
-//   // y-axis: pick a numeric field that is not 'time' or 'hrv'
-//   const sample = measurements[0];
-//   const valueKey =
-//     Object.keys(sample).find(
-//       (k) =>
-//         k !== 'time' &&
-//         k !== 'hrv' &&
-//         typeof sample[k] === 'number'
-//     ) ?? 'rate';
-
-//   const values = measurements.map((m) => m[valueKey]);
-
-//   // Axis labels
-//   const xLabel = hasTime ? 'Time (s)' : 'Sample index';
-
-//   let yLabel = 'Value';
-//   switch (id) {
-//     case 'heartrate':
-//       yLabel = 'Heart rate (bpm)';
-//       break;
-//     case 'brainPulsatility':
-//       yLabel = 'Brain pulsatility (%)';
-//       break;
-//     case 'gindex':
-//       yLabel = 'G-index';
-//       break;
-//   }
-
-//   // Destroy previous chart to avoid duplicates
-//   if (this.chart) {
-//     this.chart.destroy();
-//   }
-
-//   this.chart = new Chart(canvas, {
-//     type: 'line',
-//     data: {
-//       labels,
-//       datasets: [
-//         {
-//           label: this.currentTab().label,
-//           data: values,
-//           borderWidth: 2,
-//           tension: 0.3,
-//         },
-//       ],
-//     },
-//     options: {
-//       responsive: true,
-//       maintainAspectRatio: false, // important for our fixed-height container
-//       scales: {
-//         x: {
-//           title: {
-//             display: true,
-//             text: xLabel,
-//           },
-//         },
-//         y: {
-//           title: {
-//             display: true,
-//             text: yLabel,
-//           },
-//         },
-//       },
-//     },
-//   });
-// }
 
 //scrllable only with heartrate
 private buildChart(id: MetricId, metric: any) {
