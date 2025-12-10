@@ -53,28 +53,30 @@
 <main class="min-h-screen bg-slate-50">
   <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 
-    <!-- Metrics tabs -->
+      <!-- Metrics tabs -->
     <section>
-      <nav class="flex gap-2 border-b border-slate-200 pb-2">
+      <nav class="inline-flex items-center gap-1 rounded-full bg-slate-100 p-1 border border-slate-200">
         @for (tab of metricTabs; track tab.id) {
           <button
             type="button"
             (click)="onSelectMetric(tab.id)"
             class="px-3 py-1.5 rounded-full text-sm border transition
-              hover:bg-slate-100
-              "
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-300
+                  "
             [class.bg-slate-900]="selectedMetricId() === tab.id"
             [class.text-white]="selectedMetricId() === tab.id"
             [class.border-slate-900]="selectedMetricId() === tab.id"
-            [class.bg-slate-100]="selectedMetricId() !== tab.id"
+            [class.bg-transparent]="selectedMetricId() !== tab.id"
             [class.text-slate-700]="selectedMetricId() !== tab.id"
-            [class.border-slate-200]="selectedMetricId() !== tab.id"
+            [class.border-transparent]="selectedMetricId() !== tab.id"
+            [class.hover:bg-white]="selectedMetricId() !== tab.id"
           >
             {{ tab.label }}
           </button>
         }
       </nav>
     </section>
+
 
     <!-- Loading / error -->
     @if (loading()) {
@@ -88,65 +90,110 @@
     <!-- Dashboard content -->
     @if (!loading()) {
 
-      <!-- Summary cards -->
-      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        @for (tab of metricTabs; track tab.id) {
-          @let data = metrics()[tab.id];
+    <!-- Summary cards -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      @for (tab of metricTabs; track tab.id) {
+        @let data = metrics()[tab.id];
+        @let isActive = selectedMetricId() === tab.id;
 
-          <article
-            class="rounded-xl bg-white shadow-sm border border-slate-100 p-4 flex flex-col gap-1"
-          >
+        <article
+          (click)="onSelectMetric(tab.id)"
+          class="rounded-xl bg-white shadow-sm border border-slate-100 p-4 flex flex-col gap-1 cursor-pointer transition
+                hover:shadow-md hover:-translate-y-[1px]
+                "
+          [class.ring-2]="isActive"
+          [class.ring-rose-400]="isActive && tab.id === 'heartrate'"
+          [class.ring-emerald-400]="isActive && tab.id === 'gindex'"
+          [class.ring-indigo-400]="isActive && tab.id === 'brainPulsatility'"
+        >
+          <div class="flex items-center justify-between gap-2">
             <h2 class="text-sm font-semibold text-slate-800">
               {{ tab.label }}
             </h2>
 
-            <p class="text-xs text-slate-500">
-              @if (data?.description) {
-                {{ data.description }}
+            <!-- Small status badge -->
+            <span
+              class="inline-flex items-center rounded-full px-2 py-[2px] text-[10px] font-medium"
+              [class.bg-rose-50]="tab.id === 'heartrate'"
+              [class.text-rose-600]="tab.id === 'heartrate'"
+              [class.bg-emerald-50]="tab.id === 'gindex'"
+              [class.text-emerald-600]="tab.id === 'gindex'"
+              [class.bg-indigo-50]="tab.id === 'brainPulsatility'"
+              [class.text-indigo-600]="tab.id === 'brainPulsatility'"
+            >
+              <!-- @if (isActive) {
+                Viewing
               } @else {
-                No description
-              }
-            </p>
+                Available
+              } -->
+            </span>
+          </div>
 
-            <div class="mt-2 flex items-baseline gap-1">
-              @let avg = getTrendAverage(data);
+          <p class="text-xs text-slate-500 line-clamp-2">
+            @if (data?.description) {
+              {{ data.description }}
+            } @else {
+              No description
+            }
+          </p>
 
-              @if (avg !== null) {
-                <span class="text-lg font-semibold text-slate-900">
-                  {{ avg | number:'1.0-1' }}
-                </span>
-              } @else {
-                <span class="text-lg font-semibold text-slate-400">
-                  –
-                </span>
-              }
+          <div class="mt-2 flex items-baseline gap-1">
+            @let avg = tab.id === 'gindex'
+              ? getGIndexAverage(data)
+              : getTrendAverage(data);
 
-              <span class="text-xs text-slate-500">
-                @if (tab.id === 'heartrate') {
-                  bpm
-                } @else if (tab.id === 'brainPulsatility') {
-                  %
-                } @else {
-                  index
-                }
+
+            @if (avg !== null) {
+              <span class="text-lg font-semibold text-slate-900">
+                {{ avg | number:'1.0-1' }}
               </span>
-            </div>
+            } @else {
+              <span class="text-lg font-semibold text-slate-400">
+                –
+              </span>
+            }
 
-            <p class="text-[11px] text-slate-400 mt-1">
-              @if (data?.measurements?.length) {
-                {{ data.measurements.length }} samples
+            <span class="text-xs text-slate-500">
+              @if (tab.id === 'heartrate') {
+                bpm
+              } @else if (tab.id === 'brainPulsatility') {
+                %
               } @else {
-                No samples
+                index
               }
-            </p>
-          </article>
-        }
-      </section>
+            </span>
+          </div>
+
+          <p class="text-[11px] text-slate-400 mt-1">
+            @if (data?.measurements?.length) {
+              {{ data.measurements.length }} samples
+            } @else {
+              No samples
+            }
+          </p>
+        </article>
+      }
+    </section>
+
 
       <!-- Selected metric chart & details -->
       <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <!-- Chart block -->
         <div class="lg:col-span-2 rounded-xl bg-white shadow-sm border border-slate-100 p-4">
+          <!-- <div class="flex items-center justify-between mb-2">
+            <div>
+              <h2 class="text-sm font-semibold text-slate-800">
+                {{ currentTab().label }} – time series
+              </h2>
+              <p class="text-xs text-slate-500">
+                @if (currentMetric()?.description) {
+                  {{ currentMetric().description }}
+                } @else {
+                  Detailed view
+                }
+              </p>
+            </div>
+          </div> -->
           <div class="flex items-center justify-between mb-2">
             <div>
               <h2 class="text-sm font-semibold text-slate-800">
@@ -160,7 +207,14 @@
                 }
               </p>
             </div>
+
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-[2px] text-[11px] text-slate-600">
+                {{ currentMetric()?.measurements?.length ?? 0 }} samples
+              </span>
+            </div>
           </div>
+
 
           <!-- <div class="mt-2">
             <div class="mt-2 overflow-x-auto">
@@ -212,7 +266,7 @@
                 @let trendEntries = getTrendEntries(selectedMetricId(), currentMetric());
 
                 @if (trendEntries.length > 0) {
-                    <ul class="mt-1 space-y-1 text-sm">
+                    <!-- <ul class="mt-1 space-y-1 text-sm">
                     @for (entry of trendEntries; track entry.label) {
                         <li class="flex items-baseline justify-between">
                         <span class="text-xs text-slate-500">
@@ -224,7 +278,22 @@
                         </span>
                         </li>
                     }
-                    </ul>
+                    </ul> -->
+
+                    <ul class="mt-1 space-y-1 text-sm">
+                    @for (entry of trendEntries; track entry.label) {
+                      <li class="flex items-baseline justify-between">
+                        <span class="text-xs text-slate-500">
+                          {{ entry.label }}
+                        </span>
+                        <span class="text-sm font-medium text-slate-900">
+                          {{ entry.value | number:'1.0-1' }}
+                          <span class="text-[11px] text-slate-500 ml-1">{{ entry.unit }}</span>
+                        </span>
+                      </li>
+                    }
+                  </ul>
+
                 } @else {
                     <span class="text-xs text-slate-400">No trends available.</span>
                 }

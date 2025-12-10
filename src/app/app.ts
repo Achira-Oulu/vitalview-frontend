@@ -86,7 +86,10 @@ export class App implements OnInit {
 
         if (id === 'heartrate' && buildInitialChart) {
           this.loading.set(false);
-          this.buildChart(id, data);
+          // this.buildChart(id, data);
+
+          // Delay just enough for Angular to render the canvas
+          setTimeout(() => this.buildChart(id, data), 0);
         }
       },
       error: (err) => {
@@ -255,6 +258,41 @@ private buildChart(id: MetricId, metric: any) {
 
     return null;
   }
+
+  getGIndexAverage(metric: any): number | null {
+    if (!metric) return null;
+
+    // 1) If backend already gives a trend with an average, prefer that
+    if (metric.trends) {
+      const possibleKeys = ['index', 'gindex', 'gIndex'];
+
+      for (const key of possibleKeys) {
+        if (metric.trends[key]?.average != null) {
+          return metric.trends[key].average;
+        }
+      }
+    }
+
+    // 2) Fallback: compute average from measurements array
+    const measurements: any[] = metric.measurements ?? [];
+    if (!measurements.length) return null;
+
+    const sample = measurements[0];
+    // pick the first numeric field
+    const valueKey = Object.keys(sample).find(
+      (k) => typeof sample[k] === 'number'
+    );
+    if (!valueKey) return null;
+
+    const sum = measurements.reduce(
+      (acc, m) => acc + (Number(m[valueKey]) || 0),
+      0
+    );
+
+    return sum / measurements.length;
+  }
+
+
 
     getTrendEntries(metricId: MetricId, metric: any): { label: string; value: number; unit: string }[] {
     if (!metric?.trends) return [];
