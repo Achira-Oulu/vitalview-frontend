@@ -1,8 +1,12 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { JsonPipe, DecimalPipe } from '@angular/common';
+import { JsonPipe, DecimalPipe, CommonModule } from '@angular/common';
 import Chart from 'chart.js/auto';
+
+import { FormsModule } from '@angular/forms';
+import { FirebaseAuthService } from './firebase-auth.service';
+
 
 type MetricId = 'heartrate' | 'gindex' | 'brainPulsatility';
 
@@ -15,7 +19,7 @@ interface MetricTab {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, JsonPipe, DecimalPipe],
+  imports: [CommonModule, RouterOutlet, JsonPipe, DecimalPipe, FormsModule ],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -23,6 +27,26 @@ export class App implements OnInit {
   // App title (if you want to use it somewhere)
   protected readonly title = signal('VitalView');
   private readonly API_BASE = 'https://vitalview-backend.onrender.com';
+
+  // Login fields
+  email = '';
+  password = '';
+  token: string | null = null;
+  loginError = '';
+
+  // Inject Firebase
+  constructor(private http: HttpClient, private auth: FirebaseAuthService) {}
+
+  async handleLogin() {
+    this.loginError = '';
+    try {
+      this.token = await this.auth.login(this.email, this.password);
+      console.log("Firebase token:", this.token);
+    } catch (err: any) {
+      this.loginError = err.message || "Login failed";
+    }
+  }
+
 
 
   // Tabs for the 3 metrics
@@ -55,7 +79,7 @@ export class App implements OnInit {
     () => this.metricTabs.find((t) => t.id === this.selectedMetricId())!
   );
 
-  constructor(private http: HttpClient) {}
+  // constructor(private http: HttpClient) {}     
 
   // ngOnInit(): void {
   //   // Fetch all three metrics

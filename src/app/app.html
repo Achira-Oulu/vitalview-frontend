@@ -1,4 +1,35 @@
-<!-- <h1>VitalView – Heartrate</h1>
+<!-- LOGIN SCREEN (shown only if not logged in) -->
+<div *ngIf="!token" class="flex flex-col items-center justify-center min-h-screen gap-4">
+
+  <div class="p-6 bg-white shadow rounded w-80">
+    <h2 class="text-xl font-semibold mb-4 text-center">Login</h2>
+
+    <input type="email"
+           placeholder="Email"
+           class="border p-2 w-full mb-2"
+           [(ngModel)]="email">
+
+    <input type="password"
+           placeholder="Password"
+           class="border p-2 w-full mb-4"
+           [(ngModel)]="password">
+
+    <button class="bg-blue-500 text-white p-2 w-full rounded"
+            (click)="handleLogin()">
+      Login
+    </button>
+
+    <p class="mt-2 text-center text-red-500" *ngIf="loginError">
+      {{ loginError }}
+    </p>
+  </div>
+
+</div>
+
+<!-- DASHBOARD CONTENT (shown only when logged in) -->
+<div *ngIf="token">
+    <!-- KEEP ALL YOUR ORIGINAL DASHBOARD HTML HERE -->
+     <!-- <h1>VitalView – Heartrate</h1>
 
 @if (loading()) {
   <p>Loading...</p>
@@ -242,3 +273,5 @@
     }
   </div>
 </main>
+
+</div>
