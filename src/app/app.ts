@@ -5,7 +5,8 @@ import { JsonPipe, DecimalPipe, CommonModule } from '@angular/common';
 import Chart from 'chart.js/auto';
 
 import { FormsModule } from '@angular/forms';
-import { FirebaseAuthService } from './firebase-auth.service';
+import { FirebaseAuthService,  } from './firebase-auth.service';
+
 
 
 type MetricId = 'heartrate' | 'gindex' | 'brainPulsatility';
@@ -36,6 +37,45 @@ export class App implements OnInit {
 
   // Inject Firebase
   constructor(private http: HttpClient, private auth: FirebaseAuthService) {}
+
+  // Signal for login mode 
+  authMode = signal<'login' | 'signup' | 'reset'>('login');
+
+  setMode(mode: 'login' | 'signup' | 'reset') {
+    this.authMode.set(mode);
+  }
+
+  async handleSignup() {
+    this.loginError = '';
+    try {
+      const token = await this.auth.signup(this.email, this.password);
+      this.token = token;
+      localStorage.setItem('vitalview_token', token);
+    } catch (err: any) {
+      this.loginError = err.message || 'Signup failed';
+    }
+  }
+
+  async handleResetPassword() {
+    this.loginError = '';
+    try {
+      await this.auth.sendPasswordReset(this.email);
+      this.loginError = 'Password reset email sent!';
+    } catch (err: any) {
+      this.loginError = err.message || 'Failed to send reset email';
+    }
+  }
+
+  logout() {
+    this.token = null;
+    localStorage.removeItem('vitalview_token');
+    // Optional: reset auth mode & fields
+    this.authMode.set('login');
+    this.email = '';
+    this.password = '';
+  }
+
+
 
   async handleLogin() {
     this.loginError = '';

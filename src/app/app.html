@@ -1,277 +1,363 @@
-<!-- LOGIN SCREEN (shown only if not logged in) -->
-<div *ngIf="!token" class="flex flex-col items-center justify-center min-h-screen gap-4">
+<!-- AUTH SCREENS (shown only when not logged in) -->
+@if (!token) {
+  <div class="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <!-- LOGIN MODE -->
+    @if (authMode() === 'login') {
+      <div class="w-full max-w-sm bg-white rounded-xl shadow-md border border-slate-200 p-6">
+        <div class="flex flex-col items-center mb-4">
+          <div class="w-10 h-10 rounded-xl bg-rose-500 flex items-center justify-center text-white font-semibold">
+            V
+          </div>
+          <h2 class="mt-2 text-lg font-semibold text-slate-800">VitalView Login</h2>
+          <p class="text-xs text-slate-500">Access your health dashboard</p>
+        </div>
 
-  <div class="p-6 bg-white shadow rounded w-80">
-    <h2 class="text-xl font-semibold mb-4 text-center">Login</h2>
+        <!-- Email -->
+        <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          placeholder="you@example.com"
+          class="w-full border border-slate-300 rounded-lg p-2 mb-3 focus:ring-2 focus:ring-rose-400 focus:outline-none"
+        />
 
-    <input type="email"
-           placeholder="Email"
-           class="border p-2 w-full mb-2"
-           [(ngModel)]="email">
+        <!-- Password -->
+        <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+        <input
+          type="password"
+          [(ngModel)]="password"
+          placeholder="••••••••"
+          class="w-full border border-slate-300 rounded-lg p-2 mb-3 focus:ring-2 focus:ring-rose-400 focus:outline-none"
+        />
 
-    <input type="password"
-           placeholder="Password"
-           class="border p-2 w-full mb-4"
-           [(ngModel)]="password">
+        <!-- Login Button -->
+        <button
+          (click)="handleLogin()"
+          class="w-full bg-rose-600 hover:bg-rose-700 text-white rounded-lg py-2 font-medium transition"
+        >
+          Login
+        </button>
 
-    <button class="bg-blue-500 text-white p-2 w-full rounded"
-            (click)="handleLogin()">
-      Login
-    </button>
+        <!-- Links -->
+        <p
+          class="mt-3 text-xs text-center text-blue-600 cursor-pointer hover:underline"
+          (click)="setMode('reset')"
+        >
+          Forgot password?
+        </p>
 
-    <p class="mt-2 text-center text-red-500" *ngIf="loginError">
-      {{ loginError }}
-    </p>
-  </div>
-
-</div>
-
-<!-- DASHBOARD CONTENT (shown only when logged in) -->
-<div *ngIf="token">
-    <!-- KEEP ALL YOUR ORIGINAL DASHBOARD HTML HERE -->
-     <!-- <h1>VitalView – Heartrate</h1>
-
-@if (loading()) {
-  <p>Loading...</p>
-}
-
-@if (error()) {
-  <p style="color: red;">{{ error() }}</p>
-}
-
-@if (!loading() && heartrate()) {
-  <section>
-    <p>{{ heartrate()!.description }}</p>
-
-    <p>
-      Average heart rate:
-      {{ heartrate()!.trends.rate.average | number : '1.0-1' }}
-      {{ heartrate()!.units['rate'] ?? 'bpm' }}
-    </p>
-
-    <p>
-      Average HRV:
-      {{ heartrate()!.trends.hrv.average | number : '1.0-1' }}
-      {{ heartrate()!.units['hrv'] ?? 'ms' }}
-    </p>
-  </section>
-}
-
-<!-- Canvas is ALWAYS present -->
-<!-- <section style="max-width: 800px; margin-top: 1rem;">
-  <canvas id="hrChart" width="800" height="400"></canvas>
-</section> --> -->
-
-
-<!-- Top navigation bar -->
-<header class="w-full border-b bg-white/80 backdrop-blur">
-  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <div class="w-8 h-8 rounded-xl bg-rose-500 flex items-center justify-center text-white font-semibold">
-        V
-      </div>
-      <div class="flex flex-col">
-        <span class="font-semibold text-slate-800">VitalView</span>
-        <span class="text-xs text-slate-500">Health metrics dashboard</span>
-      </div>
-    </div>
-    <div class="text-xs text-slate-500 hidden sm:block">
-      Prototype · Angular 21 · NestJS
-    </div>
-  </div>
-</header>
-
-<main class="min-h-screen bg-slate-50">
-  <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
-
-    <!-- Metrics tabs -->
-    <section>
-      <nav class="flex gap-2 border-b border-slate-200 pb-2">
-        @for (tab of metricTabs; track tab.id) {
-          <button
-            type="button"
-            (click)="onSelectMetric(tab.id)"
-            class="px-3 py-1.5 rounded-full text-sm border transition
-              hover:bg-slate-100
-              "
-            [class.bg-slate-900]="selectedMetricId() === tab.id"
-            [class.text-white]="selectedMetricId() === tab.id"
-            [class.border-slate-900]="selectedMetricId() === tab.id"
-            [class.bg-slate-100]="selectedMetricId() !== tab.id"
-            [class.text-slate-700]="selectedMetricId() !== tab.id"
-            [class.border-slate-200]="selectedMetricId() !== tab.id"
+        <p class="mt-2 text-xs text-center text-slate-600">
+          Don't have an account?
+          <span
+            class="text-blue-600 cursor-pointer hover:underline"
+            (click)="setMode('signup')"
           >
-            {{ tab.label }}
-          </button>
+            Create one
+          </span>
+        </p>
+
+        <!-- Error -->
+        @if (loginError) {
+          <p class="mt-3 text-center text-sm text-rose-600">
+            {{ loginError }}
+          </p>
         }
-      </nav>
-    </section>
-
-    <!-- Loading / error -->
-    @if (loading()) {
-      <p class="text-slate-500 text-sm">Loading metrics…</p>
+      </div>
     }
 
-    @if (error()) {
-      <p class="text-red-500 text-sm">{{ error() }}</p>
+    <!-- SIGNUP MODE -->
+    @if (authMode() === 'signup') {
+      <div class="w-full max-w-sm bg-white rounded-xl shadow-md border border-slate-200 p-6">
+        <div class="flex flex-col items-center mb-4">
+          <div class="w-10 h-10 rounded-xl bg-rose-500 flex items-center justify-center text-white font-semibold">
+            V
+          </div>
+          <h2 class="mt-2 text-lg font-semibold text-slate-800">Create Account</h2>
+          <p class="text-xs text-slate-500">Sign up to use VitalView</p>
+        </div>
+
+        <!-- Email -->
+        <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          placeholder="you@example.com"
+          class="w-full border border-slate-300 rounded-lg p-2 mb-3 focus:ring-2 focus:ring-rose-400 focus:outline-none"
+        />
+
+        <!-- Password -->
+        <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+        <input
+          type="password"
+          [(ngModel)]="password"
+          placeholder="Choose a password"
+          class="w-full border border-slate-300 rounded-lg p-2 mb-3 focus:ring-2 focus:ring-rose-400 focus:outline-none"
+        />
+
+        <!-- Signup Button -->
+        <button
+          (click)="handleSignup()"
+          class="w-full bg-rose-600 hover:bg-rose-700 text-white rounded-lg py-2 font-medium transition"
+        >
+          Sign up
+        </button>
+
+        <p
+          class="mt-3 text-xs text-center text-blue-600 cursor-pointer hover:underline"
+          (click)="setMode('login')"
+        >
+          Back to login
+        </p>
+
+        @if (loginError) {
+          <p class="mt-3 text-center text-sm text-rose-600">
+            {{ loginError }}
+          </p>
+        }
+      </div>
     }
 
-    <!-- Dashboard content -->
-    @if (!loading()) {
+    <!-- RESET PASSWORD MODE -->
+    @if (authMode() === 'reset') {
+      <div class="w-full max-w-sm bg-white rounded-xl shadow-md border border-slate-200 p-6">
+        <div class="flex flex-col items-center mb-4">
+          <div class="w-10 h-10 rounded-xl bg-rose-500 flex items-center justify-center text-white font-semibold">
+            V
+          </div>
+          <h2 class="mt-2 text-lg font-semibold text-slate-800">Reset Password</h2>
+          <p class="text-xs text-slate-500">We will email you a reset link</p>
+        </div>
 
-      <!-- Summary cards -->
-      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        @for (tab of metricTabs; track tab.id) {
-          @let data = metrics()[tab.id];
+        <!-- Email -->
+        <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          placeholder="you@example.com"
+          class="w-full border border-slate-300 rounded-lg p-2 mb-3 focus:ring-2 focus:ring-rose-400 focus:outline-none"
+        />
 
-          <article
-            class="rounded-xl bg-white shadow-sm border border-slate-100 p-4 flex flex-col gap-1"
-          >
-            <h2 class="text-sm font-semibold text-slate-800">
+        <!-- Reset Button -->
+        <button
+          (click)="handleResetPassword()"
+          class="w-full bg-rose-600 hover:bg-rose-700 text-white rounded-lg py-2 font-medium transition"
+        >
+          Send reset email
+        </button>
+
+        <p
+          class="mt-3 text-xs text-center text-blue-600 cursor-pointer hover:underline"
+          (click)="setMode('login')"
+        >
+          Back to login
+        </p>
+
+        @if (loginError) {
+          <p class="mt-3 text-center text-sm text-rose-600">
+            {{ loginError }}
+          </p>
+        }
+      </div>
+    }
+  </div>
+}
+
+<!-- DASHBOARD (shown only when logged in) -->
+@if (token) {
+  <!-- Top navigation bar -->
+  <header class="w-full border-b bg-white/80 backdrop-blur">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-xl bg-rose-500 flex items-center justify-center text-white font-semibold">
+          V
+        </div>
+        <div class="flex flex-col">
+          <span class="font-semibold text-slate-800">VitalView</span>
+          <span class="text-xs text-slate-500">Health metrics dashboard</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-slate-500 hidden sm:block">
+          Prototype · Angular 21 · NestJS
+        </span>
+        <button
+          type="button"
+          class="text-xs px-3 py-1 rounded-full border border-slate-300 text-slate-600 hover:bg-slate-100"
+          (click)="logout()"
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="min-h-screen bg-slate-50">
+    <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
+      <!-- Metrics tabs -->
+      <section>
+        <nav class="flex gap-2 border-b border-slate-200 pb-2">
+          @for (tab of metricTabs; track tab.id) {
+            <button
+              type="button"
+              (click)="onSelectMetric(tab.id)"
+              class="px-3 py-1.5 rounded-full text-sm border transition hover:bg-slate-100"
+              [class.bg-slate-900]="selectedMetricId() === tab.id"
+              [class.text-white]="selectedMetricId() === tab.id"
+              [class.border-slate-900]="selectedMetricId() === tab.id"
+              [class.bg-slate-100]="selectedMetricId() !== tab.id"
+              [class.text-slate-700]="selectedMetricId() !== tab.id"
+              [class.border-slate-200]="selectedMetricId() !== tab.id"
+            >
               {{ tab.label }}
-            </h2>
-
-            <p class="text-xs text-slate-500">
-              @if (data?.description) {
-                {{ data.description }}
-              } @else {
-                No description
-              }
-            </p>
-
-            <div class="mt-2 flex items-baseline gap-1">
-              @let avg = getTrendAverage(data);
-
-              @if (avg !== null) {
-                <span class="text-lg font-semibold text-slate-900">
-                  {{ avg | number:'1.0-1' }}
-                </span>
-              } @else {
-                <span class="text-lg font-semibold text-slate-400">
-                  –
-                </span>
-              }
-
-              <span class="text-xs text-slate-500">
-                @if (tab.id === 'heartrate') {
-                  bpm
-                } @else if (tab.id === 'brainPulsatility') {
-                  %
-                } @else {
-                  index
-                }
-              </span>
-            </div>
-
-            <p class="text-[11px] text-slate-400 mt-1">
-              @if (data?.measurements?.length) {
-                {{ data.measurements.length }} samples
-              } @else {
-                No samples
-              }
-            </p>
-          </article>
-        }
+            </button>
+          }
+        </nav>
       </section>
 
-      <!-- Selected metric chart & details -->
-      <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <!-- Chart block -->
-        <div class="lg:col-span-2 rounded-xl bg-white shadow-sm border border-slate-100 p-4">
-          <div class="flex items-center justify-between mb-2">
-            <div>
+      <!-- Loading / error -->
+      @if (loading()) {
+        <p class="text-slate-500 text-sm">Loading metrics…</p>
+      }
+
+      @if (error()) {
+        <p class="text-red-500 text-sm">{{ error() }}</p>
+      }
+
+      <!-- Dashboard content -->
+      @if (!loading()) {
+
+        <!-- Summary cards -->
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          @for (tab of metricTabs; track tab.id) {
+            @let data = metrics()[tab.id];
+
+            <article
+              class="rounded-xl bg-white shadow-sm border border-slate-100 p-4 flex flex-col gap-1"
+            >
               <h2 class="text-sm font-semibold text-slate-800">
-                {{ currentTab().label }} – time series
+                {{ tab.label }}
               </h2>
+
               <p class="text-xs text-slate-500">
-                @if (currentMetric()?.description) {
-                  {{ currentMetric().description }}
+                @if (data?.description) {
+                  {{ data.description }}
                 } @else {
-                  Detailed view
+                  No description
                 }
               </p>
+
+              <div class="mt-2 flex items-baseline gap-1">
+                @let avg = getTrendAverage(data);
+
+                @if (avg !== null) {
+                  <span class="text-lg font-semibold text-slate-900">
+                    {{ avg | number:'1.0-1' }}
+                  </span>
+                } @else {
+                  <span class="text-lg font-semibold text-slate-400">
+                    –
+                  </span>
+                }
+
+                <span class="text-xs text-slate-500">
+                  @if (tab.id === 'heartrate') {
+                    bpm
+                  } @else if (tab.id === 'brainPulsatility') {
+                    %
+                  } @else {
+                    index
+                  }
+                </span>
+              </div>
+
+              <p class="text-[11px] text-slate-400 mt-1">
+                @if (data?.measurements?.length) {
+                  {{ data.measurements.length }} samples
+                } @else {
+                  No samples
+                }
+              </p>
+            </article>
+          }
+        </section>
+
+        <!-- Selected metric chart & details -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <!-- Chart block -->
+          <div class="lg:col-span-2 rounded-xl bg-white shadow-sm border border-slate-100 p-4">
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <h2 class="text-sm font-semibold text-slate-800">
+                  {{ currentTab().label }} – time series
+                </h2>
+                <p class="text-xs text-slate-500">
+                  @if (currentMetric()?.description) {
+                    {{ currentMetric().description }}
+                  } @else {
+                    Detailed view
+                  }
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-2 overflow-x-auto">
+              <div class="relative h-[320px] w-full">
+                <canvas id="metricChart" class="w-full h-full"></canvas>
+              </div>
             </div>
           </div>
 
-          <!-- <div class="mt-2">
-            <div class="mt-2 overflow-x-auto">
-                <div class="relative h-[320px] min-w-[900px] lg:min-w-[1200px]">
-                    <canvas id="metricChart" class="w-full h-full"></canvas>
-                </div>
-            </div>
-          </div> -->
-            <div class="mt-2 overflow-x-auto">
-                <div class="relative h-[320px] w-full">
-                    <canvas id="metricChart" class="w-full h-full"></canvas>
-                </div>
-            </div>
+          <!-- Stat block -->
+          <div class="rounded-xl bg-white shadow-sm border border-slate-100 p-4 space-y-3">
+            <h2 class="text-sm font-semibold text-slate-800">
+              {{ currentTab().label }} summary
+            </h2>
 
-        </div>
-
-        <!-- Stat block -->
-        <div class="rounded-xl bg-white shadow-sm border border-slate-100 p-4 space-y-3">
-          <h2 class="text-sm font-semibold text-slate-800">
-            {{ currentTab().label }} summary
-          </h2>
-
-          @if (currentMetric()) {
-            <div class="space-y-2 text-sm text-slate-700">
-              <p>
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                  Samples
-                </span><br />
-                {{ currentMetric().measurements?.length ?? 0 }}
-              </p>
-
-              <!-- <p>
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                  Trends
-                </span><br />
-                @if (currentMetric().trends) {
-                  <pre class="text-[11px] bg-slate-50 rounded p-2 overflow-auto">
-{{ currentMetric().trends | json }}
-                  </pre>
-                } @else {
-                  <span class="text-xs text-slate-400">No trends available.</span>
-                }
-              </p> -->
+            @if (currentMetric()) {
+              <div class="space-y-2 text-sm text-slate-700">
                 <p>
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                    Trends
-                </span><br />
-
-                @let trendEntries = getTrendEntries(selectedMetricId(), currentMetric());
-
-                @if (trendEntries.length > 0) {
-                    <ul class="mt-1 space-y-1 text-sm">
-                    @for (entry of trendEntries; track entry.label) {
-                        <li class="flex items-baseline justify-between">
-                        <span class="text-xs text-slate-500">
-                            {{ entry.label }}
-                        </span>
-                        <span class="text-sm font-medium text-slate-900">
-                            {{ entry.value | number:'1.0-1' }}
-                            <span class="text-[11px] text-slate-500">{{ entry.unit }}</span>
-                        </span>
-                        </li>
-                    }
-                    </ul>
-                } @else {
-                    <span class="text-xs text-slate-400">No trends available.</span>
-                }
+                  <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Samples
+                  </span><br />
+                  {{ currentMetric().measurements?.length ?? 0 }}
                 </p>
 
+                <p>
+                  <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Trends
+                  </span><br />
 
-            </div>
-          } @else {
-            <p class="text-xs text-slate-400">
-              No data loaded for this metric yet.
-            </p>
-          }
-        </div>
-      </section>
-    }
-  </div>
-</main>
+                  @let trendEntries = getTrendEntries(selectedMetricId(), currentMetric());
 
-</div>
+                  @if (trendEntries.length > 0) {
+                    <ul class="mt-1 space-y-1 text-sm">
+                      @for (entry of trendEntries; track entry.label) {
+                        <li class="flex items-baseline justify-between">
+                          <span class="text-xs text-slate-500">
+                            {{ entry.label }}
+                          </span>
+                          <span class="text-sm font-medium text-slate-900">
+                            {{ entry.value | number:'1.0-1' }}
+                            <span class="text-[11px] text-slate-500">{{ entry.unit }}</span>
+                          </span>
+                        </li>
+                      }
+                    </ul>
+                  } @else {
+                    <span class="text-xs text-slate-400">No trends available.</span>
+                  }
+                </p>
+              </div>
+            } @else {
+              <p class="text-xs text-slate-400">
+                No data loaded for this metric yet.
+              </p>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  </main>
+}
