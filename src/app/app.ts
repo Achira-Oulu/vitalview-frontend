@@ -6,6 +6,8 @@ import Chart from 'chart.js/auto';
 
 import { FormsModule } from '@angular/forms';
 import { FirebaseAuthService,  } from './firebase-auth.service';
+import { AnalysisService } from './analysis.service';
+
 
 
 
@@ -36,10 +38,24 @@ export class App implements OnInit {
   loginError = '';
 
   // Inject Firebase
-  constructor(private http: HttpClient, private auth: FirebaseAuthService) {}
+  constructor(
+    private http: HttpClient,
+    private auth: FirebaseAuthService,
+    private analysis: AnalysisService,
+  ) {}
 
   // Signal for login mode 
   authMode = signal<'login' | 'signup' | 'reset'>('login');
+
+
+
+  // File analysis state
+  selectedFile: File | null = null;
+  analysisStatus = signal<'idle' | 'uploading' | 'processing' | 'done' | 'error'>(
+    'idle',
+  );
+  analysisMessage = signal<string | null>(null);
+  analysisResult: any | null = null;
 
   setMode(mode: 'login' | 'signup' | 'reset') {
     this.authMode.set(mode);
@@ -86,6 +102,57 @@ export class App implements OnInit {
       this.loginError = err.message || "Login failed";
     }
   }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.selectedFile = file;
+
+    this.analysisResult = null;
+    this.analysisStatus.set('idle');
+    this.analysisMessage.set(
+      file ? `Selected file: ${file.name}` : 'No file selected',
+    );
+  }
+
+async analyzeSelectedFile() {
+  if (!this.token) {
+    this.analysisStatus.set('error');
+    this.analysisMessage.set('You must be logged in to analyze files.');
+    return;
+  }
+
+  if (!this.selectedFile) {
+    this.analysisStatus.set('error');
+    this.analysisMessage.set('Please select a .001 file first.');
+    return;
+  }
+
+  this.analysisStatus.set('uploading');
+  this.analysisMessage.set('Uploading file and starting analysis…');
+
+  try {
+    const result = await this.analysis.analyzeFileWithPolling(
+      this.selectedFile,
+      this.token,
+      this.selectedFile.name,
+      10,
+      3000,
+    );
+
+    console.log('Analysis result JSON:', result);
+
+    this.analysisResult = result;
+    this.analysisStatus.set('done');
+    this.analysisMessage.set('Analysis completed. See JSON below.');
+  } catch (err: any) {
+    console.error('Analysis error', err);
+    this.analysisStatus.set('error');
+    this.analysisMessage.set(err.message || 'Analysis failed.');
+  }
+}
+
+
 
 
 
@@ -169,6 +236,7 @@ export class App implements OnInit {
       this.buildChart(id, metric);
     }
   }
+  
 
 
 //scrllable only with heartrate
