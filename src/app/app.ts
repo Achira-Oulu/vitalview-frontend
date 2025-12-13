@@ -6,7 +6,9 @@ import Chart from 'chart.js/auto';
 
 import { FormsModule } from '@angular/forms';
 import { FirebaseAuthService,  } from './firebase-auth.service';
-import { AnalysisService } from './analysis.service';
+// import { AnalysisService } from './analysis.service';
+import { AnalysisService } from './services/analysis.service';
+import { firstValueFrom } from 'rxjs';
 
 
 
@@ -115,6 +117,42 @@ export class App implements OnInit {
     );
   }
 
+// async analyzeSelectedFile() {
+//   if (!this.token) {
+//     this.analysisStatus.set('error');
+//     this.analysisMessage.set('You must be logged in to analyze files.');
+//     return;
+//   }
+
+//   if (!this.selectedFile) {
+//     this.analysisStatus.set('error');
+//     this.analysisMessage.set('Please select a .001 file first.');
+//     return;
+//   }
+
+//   this.analysisStatus.set('uploading');
+//   this.analysisMessage.set('Uploading file and starting analysis…');
+
+//   try {
+//     const result = await this.analysis.analyzeFileWithPolling(
+//       this.selectedFile,
+//       this.token,
+//       this.selectedFile.name,
+//       10,
+//       3000,
+//     );
+
+//     console.log('Analysis result JSON:', result);
+
+//     this.analysisResult = result;
+//     this.analysisStatus.set('done');
+//     this.analysisMessage.set('Analysis completed. See JSON below.');
+//   } catch (err: any) {
+//     console.error('Analysis error', err);
+//     this.analysisStatus.set('error');
+//     this.analysisMessage.set(err.message || 'Analysis failed.');
+//   }
+// }
 async analyzeSelectedFile() {
   if (!this.token) {
     this.analysisStatus.set('error');
@@ -132,25 +170,23 @@ async analyzeSelectedFile() {
   this.analysisMessage.set('Uploading file and starting analysis…');
 
   try {
-    const result = await this.analysis.analyzeFileWithPolling(
-      this.selectedFile,
-      this.token,
-      this.selectedFile.name,
-      10,
-      3000,
+    const resp: any = await firstValueFrom(
+      this.analysis.uploadAndAnalyze(this.selectedFile, this.token)
     );
 
-    console.log('Analysis result JSON:', result);
-
-    this.analysisResult = result;
+    // resp is { status: 'ok', result: {...} }
+    this.analysisResult = resp.result;
     this.analysisStatus.set('done');
     this.analysisMessage.set('Analysis completed. See JSON below.');
   } catch (err: any) {
     console.error('Analysis error', err);
     this.analysisStatus.set('error');
-    this.analysisMessage.set(err.message || 'Analysis failed.');
+    this.analysisMessage.set(
+      err?.error?.message || err?.message || 'Analysis failed.'
+    );
   }
 }
+
 
 
 
