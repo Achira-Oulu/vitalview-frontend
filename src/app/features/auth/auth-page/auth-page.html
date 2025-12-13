@@ -1,0 +1,160 @@
+  <div class="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <!-- LOGIN MODE -->
+    @if (authMode() === 'login') {
+      <div class="w-full max-w-sm bg-white rounded-xl shadow-md border border-slate-200 p-6">
+        <div class="flex flex-col items-center mb-4">
+          <div class="w-10 h-10 rounded-xl bg-rose-500 flex items-center justify-center text-white font-semibold">
+            V
+          </div>
+          <h2 class="mt-2 text-lg font-semibold text-slate-800">VitalView Login</h2>
+          <p class="text-xs text-slate-500">Access your health dashboard</p>
+        </div>
+
+        <!-- Email -->
+        <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          placeholder="you@example.com"
+          class="w-full border border-slate-300 rounded-lg p-2 mb-3 focus:ring-2 focus:ring-rose-400 focus:outline-none"
+        />
+
+        <!-- Password -->
+        <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+        <input
+          type="password"
+          [(ngModel)]="password"
+          placeholder="••••••••"
+          class="w-full border border-slate-300 rounded-lg p-2 mb-3 focus:ring-2 focus:ring-rose-400 focus:outline-none"
+        />
+
+        <!-- Login Button -->
+        <button
+          (click)="handleLogin()"
+          class="w-full bg-rose-600 hover:bg-rose-700 text-white rounded-lg py-2 font-medium transition"
+        >
+          Login
+        </button>
+
+        <!-- Links -->
+        <p
+          class="mt-3 text-xs text-center text-blue-600 cursor-pointer hover:underline"
+          (click)="setMode('reset')"
+        >
+          Forgot password?
+        </p>
+
+        <p class="mt-2 text-xs text-center text-slate-600">
+          Don't have an account?
+          <span
+            class="text-blue-600 cursor-pointer hover:underline"
+            (click)="setMode('signup')"
+          >
+            Create one
+          </span>
+        </p>
+
+        <!-- Error -->
+        @if (loginError) {
+          <p class="mt-3 text-center text-sm text-rose-600">
+            {{ loginError }}
+          </p>
+        }
+      </div>
+    }
+
+    <!-- SIGNUP MODE -->
+    @if (authMode() === 'signup') {
+      <div class="w-full max-w-sm bg-white rounded-xl shadow-md border border-slate-200 p-6">
+        <div class="flex flex-col items-center mb-4">
+          <div class="w-10 h-10 rounded-xl bg-rose-500 flex items-center justify-center text-white font-semibold">
+            V
+          </div>
+          <h2 class="mt-2 text-lg font-semibold text-slate-800">Create Account</h2>
+          <p class="text-xs text-slate-500">Sign up to use VitalView</p>
+        </div>
+
+        <!-- Email -->
+        <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          placeholder="you@example.com"
+          class="w-full border border-slate-300 rounded-lg p-2 mb-3 focus:ring-2 focus:ring-rose-400 focus:outline-none"
+        />
+
+        <!-- Password -->
+        <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+        <input
+          type="password"
+          [(ngModel)]="password"
+          placeholder="Choose a password"
+          class="w-full border border-slate-300 rounded-lg p-2 mb-3 focus:ring-2 focus:ring-rose-400 focus:outline-none"
+        />
+
+        <!-- Signup Button -->
+        <button
+          (click)="handleSignup()"
+          class="w-full bg-rose-600 hover:bg-rose-700 text-white rounded-lg py-2 font-medium transition"
+        >
+          Sign up
+        </button>
+
+        <p
+          class="mt-3 text-xs text-center text-blue-600 cursor-pointer hover:underline"
+          (click)="setMode('login')"
+        >
+          Back to login
+        </p>
+
+        @if (loginError) {
+          <p class="mt-3 text-center text-sm text-rose-600">
+            {{ loginError }}
+          </p>
+        }
+      </div>
+    }
+
+    <!-- RESET PASSWORD MODE -->
+    @if (authMode() === 'reset') {
+      <div class="w-full max-w-sm bg-white rounded-xl shadow-md border border-slate-200 p-6">
+        <div class="flex flex-col items-center mb-4">
+          <div class="w-10 h-10 rounded-xl bg-rose-500 flex items-center justify-center text-white font-semibold">
+            V
+          </div>
+          <h2 class="mt-2 text-lg font-semibold text-slate-800">Reset Password</h2>
+          <p class="text-xs text-slate-500">We will email you a reset link</p>
+        </div>
+
+        <!-- Email -->
+        <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          placeholder="you@example.com"
+          class="w-full border border-slate-300 rounded-lg p-2 mb-3 focus:ring-2 focus:ring-rose-400 focus:outline-none"
+        />
+
+        <!-- Reset Button -->
+        <button
+          (click)="handleResetPassword()"
+          class="w-full bg-rose-600 hover:bg-rose-700 text-white rounded-lg py-2 font-medium transition"
+        >
+          Send reset email
+        </button>
+
+        <p
+          class="mt-3 text-xs text-center text-blue-600 cursor-pointer hover:underline"
+          (click)="setMode('login')"
+        >
+          Back to login
+        </p>
+
+        @if (loginError) {
+          <p class="mt-3 text-center text-sm text-rose-600">
+            {{ loginError }}
+          </p>
+        }
+      </div>
+    }
+  </div>

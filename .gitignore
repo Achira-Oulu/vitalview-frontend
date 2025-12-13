@@ -44,3 +44,5 @@ Thumbs.db
 
 # Secretes 
 src/firebase-config.ts
+
+enviroments/environment.ts
